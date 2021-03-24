@@ -61,6 +61,7 @@ import AdminTab from "./admin/AdminTab";
 import AdminMember from "./admin/AdminMember";
 import AdminPlane from "./admin/AdminPlane";
 import AdminTopic from "./admin/AdminTopic";
+import AdminSensitive from "./admin/AdminSensitive";
 import i18next from "i18next";
 import "./node.css";
 import "./i18n";
@@ -464,6 +465,18 @@ class App extends Component {
             <AdminTopic account={this.state.account} />
           </div>
         </Route>
+        <Route exact path="/admin/sensitive">
+          <div id={pcBrowser ? "Main" : ""}>
+            {pcBrowser ? <div className="sep20" /> : null}
+            <AdminSensitive account={this.state.account} />
+          </div>
+        </Route>
+        <Route exact path="/admin/sensitive/new">
+          <div id={pcBrowser ? "Main" : ""}>
+            {pcBrowser ? <div className="sep20" /> : null}
+            <AdminSensitive account={this.state.account} event={"new"} />
+          </div>
+        </Route>
       </Switch>
     );
   }
@@ -535,9 +548,28 @@ class App extends Component {
     });
   }
 
+  getThemeLink() {
+    var themeMode = undefined;
+    var modeArray = document.cookie.split("; ");
+    for (var i = 0; i < modeArray.length; i++) {
+      var kvset = modeArray[i].split("=");
+      if (kvset[0] == "themeMode") themeMode = kvset[1];
+    }
+    if (themeMode == undefined) themeMode = "true";
+    if (themeMode == "true") return "";
+    else return Setting.getStatic("/static/css/night.css");
+  }
+
   render() {
     return (
       <div>
+        <link
+          type="text/css"
+          rel="stylesheet"
+          media="all"
+          id="dark-mode"
+          href={this.getThemeLink()}
+        />
         <BackTop />
         <Header
           account={this.state.account}
