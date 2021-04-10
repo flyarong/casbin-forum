@@ -23,7 +23,7 @@ import (
 
 	"github.com/dchest/captcha"
 
-	"github.com/casbin/casbin-forum/util"
+	"github.com/casbin/casnode/util"
 )
 
 type BasicInfo struct {
@@ -113,7 +113,7 @@ func GetCaptcha() (string, []byte) {
 
 	var buffer bytes.Buffer
 
-	err := captcha.WriteImage(&buffer, id, 320, 80)
+	err := captcha.WriteImage(&buffer, id, 200, 80)
 	if err != nil {
 		panic(err)
 	}

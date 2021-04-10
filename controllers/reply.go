@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/casbin/casbin-forum/object"
-	"github.com/casbin/casbin-forum/util"
+	"github.com/casbin/casnode/object"
+	"github.com/casbin/casnode/util"
 )
 
 type NewReplyForm struct {
@@ -56,6 +56,13 @@ func (c *APIController) GetReplies() {
 	replies := object.GetReplies(topicId, memberId, limit, offset)
 
 	c.Data["json"] = Response{Status: "ok", Msg: "success", Data: replies, Data2: []int{repliesNum, page}}
+	c.ServeJSON()
+}
+
+func (c *APIController) GetAllRepliesOfTopic() {
+	topicId := util.ParseInt(c.Input().Get("topicId"))
+	replies := object.GetRepliesOfTopic(topicId)
+	c.Data["json"] = Response{Status: "ok", Msg: "success", Data: replies, Data2: len(replies)}
 	c.ServeJSON()
 }
 

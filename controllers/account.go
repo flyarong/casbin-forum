@@ -22,16 +22,16 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strings"
 	"sync"
 
 	"golang.org/x/oauth2"
 
-	"github.com/aliyun/aliyun-sts-go-sdk/sts"
 	"github.com/astaxie/beego"
 
-	"github.com/casbin/casbin-forum/object"
-	"github.com/casbin/casbin-forum/service"
-	"github.com/casbin/casbin-forum/util"
+	"github.com/casbin/casnode/object"
+	"github.com/casbin/casnode/service"
+	"github.com/casbin/casnode/util"
 )
 
 type SignupForm struct {
@@ -88,6 +88,21 @@ func (c *APIController) Signup() {
 	if err != nil {
 		panic(err)
 	}
+
+	if len(form.Password) == 0 {
+		resp = Response{Status: "error", Msg: "Password empty"}
+		c.Data["json"] = resp
+		c.ServeJSON()
+		return
+	}
+
+	if strings.Index(form.Password, " ") >= 0 {
+		resp = Response{Status: "error", Msg: "Password contains space"}
+		c.Data["json"] = resp
+		c.ServeJSON()
+		return
+	}
+
 	if form.Method != "google" && form.Method != "github" && form.Method != "qq" && form.Method != "wechat" {
 		// Check validate code.
 		var validateCodeRes bool
@@ -108,6 +123,13 @@ func (c *APIController) Signup() {
 	}
 
 	member, password, email, avatar := form.Username, form.Password, form.Email, form.Avatar
+
+	if object.HasMember(member) {
+		resp = Response{Status: "error", Msg: "Member already exists"}
+		c.Data["json"] = resp
+		c.ServeJSON()
+		return
+	}
 
 	checkUserName := object.UserNamingRestrictions
 	if checkUserName {
@@ -412,6 +434,16 @@ func (c *APIController) ResetPassword() {
 			recordType = 1
 		} else if form.Method == "email" {
 			recordType = 2
+		}
+
+		if len(form.Password) == 0 {
+			resp = Response{Status: "error", Msg: "Password is empty"}
+			break
+		}
+
+		if strings.Index(form.Password, " ") >= 0 {
+			resp = Response{Status: "error", Msg: "Password contains space"}
+			break
 		}
 
 		res := object.VerifyResetInformation(form.Id, form.Code, form.Username, recordType)
@@ -962,41 +994,6 @@ func (c *APIController) AuthWeChat() {
 			object.LinkMemberAccount(memberId, "avatar", avatar)
 		}
 	}
-
-	c.Data["json"] = resp
-
-	c.ServeJSON()
-}
-
-var accessKeyID = beego.AppConfig.String("accessKeyID")
-var accessKeySecret = beego.AppConfig.String("accessKeySecret")
-var roleArn = beego.AppConfig.String("roleArn")
-
-func (c *APIController) GetMemberStsToken() {
-	sessionName := util.ConvertToPinyin(c.GetSessionUser())
-
-	if accessKeyID == "" {
-		resp := Response{Status: "fail", Msg: "Missing sts config."}
-		c.Data["json"] = resp
-		c.ServeJSON()
-		return
-	}
-
-	stsClient := sts.NewClient(accessKeyID, accessKeySecret, roleArn, sessionName)
-
-	authResp, err := stsClient.AssumeRole(3600)
-	if err != nil {
-		panic(err)
-	}
-
-	res := stsTokenResponse{
-		AccessKeyID:     authResp.Credentials.AccessKeyId,
-		AccessKeySecret: authResp.Credentials.AccessKeySecret,
-		StsToken:        authResp.Credentials.SecurityToken,
-	}
-
-	var resp Response
-	resp = Response{Status: "ok", Msg: "success", Data: res}
 
 	c.Data["json"] = resp
 

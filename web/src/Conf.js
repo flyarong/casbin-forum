@@ -1,4 +1,4 @@
-// Copyright 2020 The casbin Authors. All Rights Reserved.
+// Copyright 2021 The casbin Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,23 +44,9 @@ export const WeChatAuthScope = "snsapi_login";
 
 export const WeChatOauthUri = "https://open.weixin.qq.com/connect/qrconnect";
 
-export const OSSRegion = "";
-
-//The endpoint of your oss region, find it on https://help.aliyun.com/document_detail/31837.html
-export const OSSEndPoint = "";
-
-export const OSSBucket = "";
-
-//The path stored in your oss
-//eg: `casbin-forum` or `casbin/forum/xxx/xxx`
-export const OSSBasicPath = "";
-
-//If you set a custom domain name in ali-oss bucket, please fill in.
-export const OSSCustomDomain = "";
-
 export const ShowGithubCorner = true;
 
-export const GithubRepo = "https://github.com/casbin/casbin-forum";
+export const GithubRepo = "https://github.com/casbin/casnode";
 
 export const Domain = "forum.casbin.com";
 
@@ -72,3 +58,9 @@ export const DefaultEditorType = "markdown";
 //Default search engine
 //Support: baidu(www.baidu.com) | google(www.google.com) | cn-bing(cn.bing.com)
 export const DefaultSearchSite = "google";
+
+export const EnableNotificationAutoUpdate = false;
+
+export const NotificationAutoUpdatePeriod = 10; // second
+
+export const DefaultTopicPageReplyNum = 50;

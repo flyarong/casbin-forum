@@ -1,4 +1,4 @@
-// Copyright 2020 The casbin Authors. All Rights Reserved.
+// Copyright 2021 The casbin Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 import * as Setting from "../Setting";
 import * as MemberBackend from "../backend/MemberBackend";
 import * as FileBackend from "../backend/FileBackend";
+import i18next from "i18next";
 
 require("inline-attachment/src/inline-attachment");
 require("inline-attachment/src/codemirror-4.inline-attachment");
@@ -46,19 +47,7 @@ export function uploadMdFile(addMsg) {
     this.settings.onFileUploaded.call(this, fileName);
   };
 
-  let newClient,
-    url,
-    timestamp,
-    path,
-    filePath,
-    fileName,
-    size,
-    originalFileName,
-    uploadStatus = false;
-  newClient = Setting.OSSClient;
-  path = Setting.OSSFileUrl;
-  url = Setting.OSSUrl;
-  timestamp = Date.parse(new Date());
+  let uploadStatus = false;
 
   /* eslint-disable */ inlineAttachment.prototype.uploadFile = function (file) {
     if (file.size > 1024 * 1024 * 6) {
@@ -66,31 +55,16 @@ export function uploadMdFile(addMsg) {
       return;
     }
 
-    let fileType = Setting.getFileType(file.name);
-    originalFileName = file.name;
-    fileName = timestamp + "." + fileType.ext;
-    size = file.size;
-
-    let mdUrl = `${url}/${fileType.fileType}/${fileName}`;
-    filePath = `${path}/${fileType.fileType}/${fileName}`; //path
-    newClient
-      .multipartUpload(`${filePath}`, file)
-      .then((res) => {
-        this.onFileUploadResponse(file.name, encodeURI(mdUrl));
-        uploadStatus = true;
-        FileBackend.addFileRecord({
-          fileName: originalFileName,
-          filePath: filePath,
-          fileUrl: mdUrl,
-          size: size,
-        });
-      })
-      .catch((error) =>
-        Setting.showMessage(
-          "error",
-          i18next.t("Adding image failed") + `：${error}`
-        )
-      );
+    let reader = new FileReader();
+    reader.onload = (e) => {
+      FileBackend.uploadTopicPic(e.target.result).then((res) => {
+        if (res.status == "ok") {
+          this.uploadStatus = true;
+          this.onFileUploadResponse(res.msg, encodeURI(res.data));
+        } else alert("oss error, can't upload picture now.");
+      });
+    };
+    reader.readAsDataURL(file);
   };
 }
 
@@ -101,59 +75,43 @@ export function uploadFile(file) {
     return;
   }
 
-  let newClient, url, timestamp, path, fileName;
   let fileType = Setting.getFileType(file.name);
-  newClient = Setting.OSSClient;
-  path = Setting.OSSFileUrl;
-  url = Setting.OSSUrl;
-  timestamp = Date.parse(new Date());
-  fileName = timestamp + "." + fileType.ext;
-
-  let fileUrl = `${url}/${fileType.fileType}/${fileName}`;
-  let filePath = `${path}/${fileType.fileType}/${fileName}`; //path
-  newClient
-    .multipartUpload(`${filePath}`, file)
-    .then((res) => {})
-    .catch((error) =>
-      Setting.showMessage("error", i18next.t("Add file failed") + `：${error}`)
+  let reader = new FileReader();
+  reader.onload = (e) => {
+    FileBackend.uploadFile(e.target.result, file.name, fileType.ext).then(
+      (res) => {
+        if (res.status == "ok") {
+          FileBackend.addFileRecord({
+            fileName: file.name,
+            filePath: "file/" + file.name,
+            fileUrl: res.data,
+            size: file.size,
+          });
+          window.location.href = "/i";
+        } else alert("Uploading failed.");
+      }
     );
-
-  return FileBackend.addFileRecord({
-    fileName: file.name,
-    filePath: filePath,
-    fileUrl: fileUrl,
-    size: file.size,
-  });
+  };
+  reader.readAsDataURL(file);
 }
 
 // upload avatar
 export function uploadAvatar(file, redirectUrl) {
-  let fileType = Setting.getFileType(file.name);
-  let newClient, url, timestamp, path, fileName;
-  newClient = Setting.OSSClient;
-  path = Setting.OSSFileUrl;
-  url = Setting.OSSUrl;
-  timestamp = Date.parse(new Date());
-  fileName = timestamp + "." + fileType.ext;
   if (file.size > 2 * 1024 * 1024) {
     alert("File size exceeds 2MB");
     return;
   }
-
-  let filePath = `${path}/avatar/${fileName}`;
-  newClient
-    .multipartUpload(`${filePath}`, file)
-    .then((res) => {
-      MemberBackend.updateMemberAvatar(`${url}/avatar/${fileName}`).then(
-        () => (window.location.href = `${redirectUrl}?success=true`)
-      );
-    })
-    .catch((error) =>
-      Setting.showMessage(
-        "error",
-        i18next.t("Adding image failed") + `：${error}`
-      )
-    );
+  let reader = new FileReader();
+  reader.onload = (e) => {
+    FileBackend.uploadAvatar(e.target.result).then((res) => {
+      if (res.status == "ok") {
+        MemberBackend.updateMemberAvatar(res.data).then(
+          () => (window.location.href = `${redirectUrl}?success=true`)
+        );
+      } else alert("Uploading failed: " + res.msg);
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 export function myUploadFn(param) {
@@ -163,7 +121,7 @@ export function myUploadFn(param) {
       msg: i18next.t("Adding image failed"),
     });
   };
-  const successFn = (response) => {
+  const successFn = (mdUrl) => {
     param.success({
       url: mdUrl,
       meta: {
@@ -174,47 +132,32 @@ export function myUploadFn(param) {
     });
   };
 
-  let newClient,
-    url,
-    timestamp,
-    path,
-    filePath,
+  let timestamp,
     fileName,
     size,
-    originalFileName;
-
-  newClient = Setting.OSSClient;
-  path = Setting.OSSFileUrl;
-  url = Setting.OSSUrl;
+    originalFileName,
+    uploadStatus = false;
 
   timestamp = Date.parse(new Date());
 
   let fileType = Setting.getFileType(param.file.name);
   size = param.file.size;
-  originalFileName = param.file.name;
   fileName = timestamp + "." + fileType.ext;
 
-  let mdUrl = `${url}/${fileType.fileType}/${fileName}`;
-  filePath = `${path}/${fileType.fileType}/${fileName}`; //path
-  newClient
-    .multipartUpload(`${filePath}`, param.file)
-    .then((res) => {
-      uploadStatus = true;
-      FileBackend.addFileRecord({
-        fileName: originalFileName,
-        filePath: filePath,
-        fileUrl: mdUrl,
-        size: size,
-      });
-      successFn();
-    })
-    .catch((error) => {
-      errorFn();
-      return Setting.showMessage(
-        "error",
-        i18next.t("Adding image failed") + `：${error}`
-      );
-    });
+  let reader = new FileReader();
+  reader.onload = (e) => {
+    FileBackend.uploadFile(e.target.result, timestamp, fileType.ext).then(
+      (res) => {
+        if (res.status == "ok") {
+          this.uploadStatus = true;
+          successFn(res.data);
+        } else {
+          errorFn();
+        }
+      }
+    );
+  };
+  reader.readAsDataURL(param.file);
 }
 
 /**

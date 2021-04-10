@@ -20,7 +20,6 @@ import md5 from "js-md5";
 import * as Conf from "./Conf";
 import * as AccountBackend from "./backend/AccountBackend";
 import * as MemberBackend from "./backend/MemberBackend";
-import oss from "ali-oss";
 import { Link } from "react-router-dom";
 import * as i18n from "./i18n";
 import i18next from "i18next";
@@ -133,7 +132,7 @@ export function getUserAvatar(username, isLarge = false) {
 }
 
 export function getForumName() {
-  return "Casbin Forum";
+  return "Casnode";
 }
 
 export function getHomeLink(text) {
@@ -156,69 +155,23 @@ export function getWeChatAuthCode(method) {
   window.location.href = `${Conf.WeChatOauthUri}?appid=${Conf.WechatClientId}&redirect_uri=${ClientUrl}/callback/wechat/${method}&scope=${Conf.WeChatAuthScope}&response_type=code&state=${Conf.WeChatAuthState}#wechat_redirect`;
 }
 
-export let OSSClient;
-export let OSSUrl;
-export let OSSFileUrl;
-
-export function initNewOSSClient(accessKeyId, accessKeySecret, stsToken) {
-  if (Conf.OSSBucket === "") {
-    return;
-  }
-
-  let newClient;
-  newClient = new oss({
-    region: Conf.OSSRegion,
-    accessKeyId: accessKeyId,
-    accessKeySecret: accessKeySecret,
-    bucket: Conf.OSSBucket,
-    stsToken: stsToken,
-  });
-  OSSClient = newClient;
-}
-
-export function initOSSClient(id) {
-  getOSSClient(initNewOSSClient);
-  let url, fileUrl;
-  //id = encodeURI(id);
-  if (Conf.OSSCustomDomain.length !== 0) {
-    url = `https://${Conf.OSSCustomDomain}/${Conf.OSSBasicPath}/${id}`;
-  } else {
-    url = `https://${Conf.OSSBucket}.${Conf.OSSEndPoint}/${Conf.OSSBasicPath}/${id}`;
-  }
-  fileUrl = `${Conf.OSSBasicPath}/${id}`;
-  OSSUrl = url;
-  OSSFileUrl = fileUrl;
-}
-
-export function getOSSClient(initNewOSSClient) {
-  AccountBackend.getStsToken().then((res) => {
-    if (res.status === "ok") {
-      initNewOSSClient(
-        res.data.accessKeyId,
-        res.data.accessKeySecret,
-        res.data.stsToken
-      );
-    }
-  });
-}
-
 export function SetEditorType(editorType) {
-  localStorage.setItem("casbin-forum-editorType", editorType);
+  localStorage.setItem("casnode-editorType", editorType);
 }
 
 export function ChangeEditorType(editorType) {
-  localStorage.setItem("casbin-forum-editorType", editorType);
+  localStorage.setItem("casnode-editorType", editorType);
   MemberBackend.updateMemberEditorType(editorType).then(() => goToLink("/"));
 }
 
 export function SetLanguage(language) {
-  localStorage.setItem("casbin-forum-language", language);
+  localStorage.setItem("casnode-language", language);
   changeMomentLanguage(language);
   i18next.changeLanguage(language);
 }
 
 export function ChangeLanguage(language) {
-  localStorage.setItem("casbin-forum-language", language);
+  localStorage.setItem("casnode-language", language);
   changeMomentLanguage(language);
   i18next.changeLanguage(language);
   MemberBackend.updateMemberLanguage(language).then(() => goToLink("/"));

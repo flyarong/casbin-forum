@@ -20,17 +20,17 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/plugins/cors"
 	_ "github.com/astaxie/beego/session/mysql"
-	"github.com/casbin/casbin-forum/controllers"
-	"github.com/casbin/casbin-forum/object"
-	"github.com/casbin/casbin-forum/routers"
-	"github.com/casbin/casbin-forum/service"
-	"github.com/casbin/casbin-forum/util"
+	"github.com/casbin/casnode/controllers"
+	"github.com/casbin/casnode/object"
+	"github.com/casbin/casnode/routers"
+	"github.com/casbin/casnode/service"
+	"github.com/casbin/casnode/util"
 )
 
 func main() {
 	object.InitAdapter()
 	controllers.InitHttpClient()
-	service.InitAliOSS()
+	service.InitOSS()
 	util.InitSegmenter()
 	object.InitForumBasicInfo()
 

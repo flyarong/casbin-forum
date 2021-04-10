@@ -232,14 +232,7 @@ class NewBox extends React.Component {
       );
     }
 
-    if (this.props.account !== null) {
-      if (!this.state.initOSSClientStatus) {
-        Setting.initOSSClient(this.props.account?.id);
-        this.setState({
-          initOSSClientStatus: true,
-        });
-      }
-    } else {
+    if (this.props.account === null) {
       this.props.history.push("/signin");
     }
 
@@ -339,7 +332,10 @@ class NewBox extends React.Component {
           >
             <Select2
               value={this.getIndexFromNodeId(this.state.form.nodeId)}
-              style={{ width: "300px", fontSize: "14px" }}
+              style={{
+                width: Setting.PcBrowser ? "300px" : "200px",
+                fontSize: "14px",
+              }}
               data={this.state.nodes.map((node, i) => {
                 return { text: `${node.name} / ${node.id}`, id: i };
               })}

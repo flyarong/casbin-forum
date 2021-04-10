@@ -33,6 +33,7 @@ class SettingsBox extends React.Component {
       event: props.match.params.event,
       topics: [],
       username: "",
+      password: "",
       form: {},
       avatar: null,
       showSuccess: false,
@@ -96,6 +97,7 @@ class SettingsBox extends React.Component {
     avatar = params.get("avatar");
     return {
       username: this.state.username,
+      password: this.state.password,
       email: email,
       method: method,
       addition: addition,
@@ -109,20 +111,34 @@ class SettingsBox extends React.Component {
     AccountBackend.signup(name)
       .then((res) => {
         if (res.status === "ok") {
-          Setting.showMessage("success", `Set username success`);
+          Setting.showMessage(
+            "success",
+            i18next.t("setting:Set username success")
+          );
           window.location.href = "/";
         } else {
-          Setting.showMessage("error", `Set username failed：${res.msg}`);
+          Setting.showMessage(
+            "error",
+            `${i18next.t("setting:Set username failed")}: ${i18next.t(
+              "setting:" + res.msg
+            )}`
+          );
         }
       })
       .catch((error) => {
-        Setting.showMessage("error", `Set username failed：${error}`);
+        Setting.showMessage("error", `setting:Set username failed：${error}`);
       });
   }
 
-  handleChange(e) {
+  handleUsernameChange(e) {
     this.setState({
       username: e.target.value,
+    });
+  }
+
+  handlePasswordChange(e) {
+    this.setState({
+      password: e.target.value,
     });
   }
 
@@ -292,7 +308,21 @@ class SettingsBox extends React.Component {
                       type="text"
                       className="sl"
                       name="username"
-                      onChange={this.handleChange.bind(this)}
+                      onChange={this.handleUsernameChange.bind(this)}
+                      autoComplete="off"
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <td width="120" align="right">
+                    {i18next.t("setting:Password")}
+                  </td>
+                  <td width="auto" align="left">
+                    <input
+                      type="password"
+                      className="sl"
+                      name="password"
+                      onChange={this.handlePasswordChange.bind(this)}
                       autoComplete="off"
                     />
                   </td>
@@ -317,9 +347,6 @@ class SettingsBox extends React.Component {
     }
 
     if (this.state.event === "avatar") {
-      if (this.props.account !== undefined) {
-        Setting.initOSSClient(this.props.account?.id);
-      }
       return (
         <div>
           {this.renderHeader()}
@@ -360,6 +387,7 @@ class SettingsBox extends React.Component {
                         accept=".jpg,.gif,.png,.JPG,.GIF,.PNG"
                         onChange={(event) => this.handleChangeAvatar(event)}
                         name="avatar"
+                        style={{ width: "200px" }}
                       />
                     </td>
                   </tr>

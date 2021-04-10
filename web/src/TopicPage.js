@@ -28,7 +28,7 @@ class TopicPage extends React.Component {
   constructor(props) {
     super(props);
     const rootTabId = "all"; // should be set as the root tab id
-    const lastTabOpen = localStorage.getItem("casbin-forum-lastUsedTab");
+    const lastTabOpen = localStorage.getItem("casnode-lastUsedTab");
     this.state = {
       classes: props,
       topics: [],
@@ -69,7 +69,7 @@ class TopicPage extends React.Component {
       },
       () => {
         window.history.pushState({}, 0, `/?tab=${this.state.tab}`);
-        localStorage.setItem("casbin-forum-lastUsedTab", tab);
+        localStorage.setItem("casnode-lastUsedTab", tab);
         this.getNodeInfo();
         this.getTopics();
       }
@@ -252,7 +252,7 @@ class TopicPage extends React.Component {
           <tbody>
             <tr>
               <td width="auto">
-                {this.state.unreadNotificationNum !== 0 ? (
+                {this.state.unreadNotificationNum === 0 ? (
                   <Link to="/notifications" className="gray">
                     0 {i18next.t("bar:unread")}
                   </Link>
